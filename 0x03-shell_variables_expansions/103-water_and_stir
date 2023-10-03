@@ -1,0 +1,4 @@
+#!/bin/bash
+#!/bin/bash
+(result_base10=$(( $(echo "$WATER" | tr -cd 'a-zA-Z' | tr 'a-z' '0-9') + $(echo "$STIR" | tr -cd 'a-zA-Z' | tr 'a-z' '0-9') )); result_bestchol=$(echo "$result_base10" | tr '0-9' 'a-z')) && echo "$result_bestchol"
+
