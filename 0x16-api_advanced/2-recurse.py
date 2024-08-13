@@ -1,39 +1,50 @@
 #!/usr/bin/python3
-"""Contains recurse function"""
-import requests
+""" Flask Application """
+from models import storage
+from api.v1.views import app_views
+from os import environ
+from flask import Flask, render_template, make_response, jsonify
+from flask_cors import CORS
+from flasgger import Swagger
+from flasgger.utils import swag_from
+
+app = Flask(__name__)
+app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
+app.register_blueprint(app_views)
+cors = CORS(app, resources={r"/api/v1/*": {"origins": "*"}})
 
 
-def recurse(subreddit, hot_list=[], after="", count=0):
-    """Returns a list of titles of all hot posts on a given subreddit."""
-    url = "https://www.reddit.com/r/{}/hot/.json".format(subreddit)
-    headers = {
-        "User-Agent": "0x16-api_advanced:project:\
-v1.0.0 (by /u/firdaus_cartoon_jr)"
-    }
-    params = {
-        "after": after,
-        "count": count,
-        "limit": 100
-    }
-    response = requests.get(url, headers=headers, params=params,
-                            allow_redirects=False)
-    
-    # Check if the response is valid JSON
-    try:
-        results = response.json().get("data")
-    except ValueError:
-        # If response is not JSON or an error occurs, return None
-        return None
+@app.teardown_appcontext
+def close_db(error):
+    """ Close Storage """
+    storage.close()
 
-    # Check if subreddit does not exist
-    if response.status_code == 404 or results is None:
-        return None
 
-    after = results.get("after")
-    count += results.get("dist")
-    for c in results.get("children"):
-        hot_list.append(c.get("data").get("title"))
+@app.errorhandler(404)
+def not_found(error):
+    """ 404 Error
+    ---
+    responses:
+      404:
+        description: a resource was not found
+    """
+    return make_response(jsonify({'error': "Not found"}), 404)
 
-    if after is not None:
-        return recurse(subreddit, hot_list, after, count)
-    return hot_list
+
+app.config['SWAGGER'] = {
+    'title': 'AirBnB clone Restful API',
+    'uiversion': 3
+}
+
+Swagger(app)
+
+
+if __name__ == "__main__":
+    """ Main Function """
+    host = environ.get('HBNB_API_HOST')
+    port = environ.get('HBNB_API_PORT')
+    if not host:
+        host = '0.0.0.0'
+    if not port:
+        port = '5000'
+    app.run(host=host, port=port, threaded=True, debug=True)
