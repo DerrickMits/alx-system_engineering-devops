@@ -1,22 +1,25 @@
 #!/usr/bin/python3
-"""Contains top_ten function"""
+"""
+THis script will print the titles of the first 10 posts listed for a given
+subreddit
+"""
 import requests
 
 
 def top_ten(subreddit):
-    """Print the titles of the 10 hottest posts on a given subreddit."""
-    url = "https://www.reddit.com/r/{}/hot/.json".format(subreddit)
-    headers = {
-        "User-Agent": "0x16-api_advanced:project:\
-v1.0.0 (by /u/firdaus_cartoon_jr)"
-    }
-    params = {
-        "limit": 10
-    }
-    response = requests.get(url, headers=headers, params=params,
-                            allow_redirects=False)
-    if response.status_code == 404:
-        print("None")
+    """ THis shall query the Reddit API to prnt titles of first 10 hot posts"""
+    bz_url = 'https://www.reddit.com'
+    url = '{base}/r/{subreddit}/hot.json'.format(base=bz_url,
+                                                 subreddit=subreddit)
+    usr_agt = {'User-Agent': 'Python/requests'}
+    respo = requests.get(url, headers=usr_agt, allow_redirects=False)
+    if respo.status_code != 200:
+        print(None)
         return
-    results = response.json().get("data")
-    [print(c.get("data").get("title")) for c in results.get("children")]
+    else:
+        respo_json = respo.json()
+        if respo_json.get('data') and respo_json.get('data').get('children'):
+            psts = respo_json.get('data').get('children')
+            for pst in psts[:10]:
+                if pst.get('data') and pst.get('data').get('title'):
+                    print(pst.get('data').get('title'))
